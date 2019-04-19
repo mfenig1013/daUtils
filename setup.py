@@ -8,4 +8,7 @@ setup(name='dautils',
       author_email='mfenig1013@gmail.com',
       license='MIT',
       packages=['dautils'],
+      test_suite='nose.collector',
+      tests_require=['nose'],
+      install_requires=['numpy', 'scipy', 'matplotlib', 'pandas'],
       zip_safe=False)
