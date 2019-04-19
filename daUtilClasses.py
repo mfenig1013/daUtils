@@ -19,30 +19,28 @@ class dataPair(object):
             raise ValueError('y and x do not have the same length.')
         self.numPoints = len(x)
     
-    # compute the relationship between y and x
+    # compute the 'relationship' between y and x
     @abstractmethod
     def relate(self):
         pass
 
 # continuous-to-continuous pair
 class contCont(dataPair):
-    # calculate the spearman correlation between the two point
+    # calculate the spearman correlation
     def relate(self, nThreshold=30):
         if (len(self.y) > nThreshold) and (len(self.x) > nThreshold):
             sp = ss.spearmanr(self.y, self.x, nan_policy='omit')
-            faDict = {'effectSize': sp[0], 'p-value': sp[1], 'test': 'Spearman'}
+            faDict = {'effect': sp[0], 'p': sp[1], 'test': 'Spearman'}
         else: # skip relationship calculation if we do not have at least nThreshold points
-            faDict = {'effectSize': np.nan, 'p-value': np.nan,\
-            'test': '<' + str(self.numPoints)}
+            faDict = {'effect': np.nan, 'p': np.nan,\
+            'test': '<' + str(self.nThreshold)}
         return faDict
 
 # categorical-to-categorical
 class catCat(dataPair):
-    def relate(self, nThreshold=30):
+    def relate(self):
         allRet = []
-        # y is always assumed to be the target
         yUnique = list(set(self.y))
-        # x is the feature
         xUnique = list(set(self.x))
         contingencyTable = np.zeros((len(yUnique), len(xUnique)))
         for irow in range(len(yUnique)):
@@ -56,7 +54,7 @@ class catCat(dataPair):
         ctsize = contingencyTable.sum().sum()
         minDen = min(contingencyTable.shape[0] - 1, contingencyTable.shape[1] - 1)
         cv = np.sqrt((chi2Stat/ctsize)/minDen)
-        allRet.append({'p-value': pvalue, 'effectSize': cv, 'test': 'CramerV'})
+        allRet.append({'p': pvalue, 'effect': cv, 'test': 'CramerV'})
         
         # total count of y
         numy = float(len(self.y))
@@ -74,8 +72,8 @@ class catCat(dataPair):
                 # binomial test
                 btest = ss.binom_test(rc, totalCol, priorRow)
                 oddsRatio = pyx/priorRow
-                allRet.append({'p-value': btest, 'effectSize': oddsRatio,\
-                               'test': 'Binomial (p-value), effectSize p(y=' +\
+                allRet.append({'p': btest, 'effect': oddsRatio,\
+                               'test': 'Binomial (p), effect p(y=' +\
                                str(yvalue) + '|' + 'x=' + str(xvalue) +\
                                           ') / p(y=' + str(yvalue) + ')'})
         return allRet
@@ -83,7 +81,7 @@ class catCat(dataPair):
 # categorical-to-continuous
 class catCont(dataPair):
     # for each category, perform a one-vs-all other mann-whitney test to evaluate difference
-    def relate(self, nThreshold=20):
+    def relate(self, nThreshold=30):
         uniqueCat = list(set(self.y))
         allRet = []
         for uc in uniqueCat:
@@ -98,11 +96,11 @@ class catCont(dataPair):
                 # +1 means utmp1 is greater in all possible pairs with utmp0.
                 # -1 means utmp1 is less in all possible pairs with utmp0
                 r1 = 1. - (2*statistic)/(n1*n0)
-                faDict = {'effectSize': r1, 'p-value': pvalue,\
+                faDict = {'effect': r1, 'p': pvalue,\
                 'test': str(uc) + '_vs_~' + str(uc) + '_MannWhitney'}
             else:
-                faDict = {'effectSize': np.nan,\
-                          'test': '# of ' + str(uc) + ' < ' + str(nThreshold),
-                          'p-value': np.nan}
+                faDict = {'effect': np.nan,\
+                          'test': '<' + str(nThreshold),
+                          'p': np.nan}
             allRet.append(faDict)
         return allRet

@@ -7,7 +7,6 @@ import daUtils
 import numpy as np
 import pandas as pd
 from daUtilClasses import contCont, catCont, catCat
-pd.set_option('display.max_columns', 500)
 
 # Tests for daUtils
 class daUtilsTests(unittest.TestCase):
@@ -62,7 +61,7 @@ class daUtilsTests(unittest.TestCase):
         self.assertTrue(counter == 0)
                 
     # test feature sifter
-    def testFeatureSift(self):
+    def testdaSift(self):
         # consider a continuous dependent variable with continuous and categorical independents
         npoints = 1000
         means = (0, 0)
@@ -71,8 +70,8 @@ class daUtilsTests(unittest.TestCase):
         dfCont = pd.DataFrame({'target': dat[:,0], 'xCont': dat[:,1]})
         dfCont['xCat'] = 'Cat0'
         dfCont.loc[dfCont['target'] > 1, 'xCat'] = 'Cat1'
-        contAnalysis = daUtils.featureSift(dfCont, targetCol='target', targetType='cont')
-        self.assertTrue(contAnalysis['p-value'].iloc[0] < 1e-3)
+        contAnalysis = daUtils.daSift(dfCont, targetCol='target', targetType='cont')
+        self.assertTrue(contAnalysis['p'].iloc[0] < 1e-3)
 
         # consider a categorical dependent variable with continuous and categorical independents
         dbCat = pd.DataFrame({'random': np.random.random(npoints)})
@@ -86,8 +85,8 @@ class daUtilsTests(unittest.TestCase):
         dbCat['xCat'] = 'Cat0'
         dbCat.loc[(dbCat['random'] > 0.4) & (dbCat['random'] < 0.7), 'xCat'] = 'Cat1'
         del dbCat['random']
-        classAnalysis = daUtils.featureSift(dbCat, targetCol='target', targetType='class')
-        self.assertTrue(classAnalysis['p-value'].iloc[0] < 1)
+        classAnalysis = daUtils.daSift(dbCat, targetCol='target', targetType='class')
+        self.assertTrue(classAnalysis['p'].iloc[0] < 1)
     
     # test outlierRemoval
     def testOutlierRemoval(self):
@@ -113,7 +112,7 @@ class daUtilsTests(unittest.TestCase):
         cc = contCont(y, x)
         summ = cc.relate()
         # correlation should be within 10%
-        self.assertTrue((summ['effectSize'] > 0.4) & (summ['effectSize'] < 0.6))
+        self.assertTrue((summ['effect'] > 0.4) & (summ['effect'] < 0.6))
 
     def testCatContCat(self):
         # consider a categorical dependent variable with continuous and categorical independents
@@ -135,14 +134,14 @@ class daUtilsTests(unittest.TestCase):
         x = dbCat['xCont'].values
         cc = catCont(y, x)
         allSumm = cc.relate()
-        self.assertTrue(allSumm[0]['effectSize'] > 0)
-        self.assertTrue(allSumm[1]['effectSize'] < 0)
+        self.assertTrue(allSumm[0]['effect'] > 0)
+        self.assertTrue(allSumm[1]['effect'] < 0)
         
         x = dbCat['xCat']
         cc = catCat(y, x)
         ccOut = cc.relate()
-        self.assertTrue(ccOut[0]['p-value'] < 1e-3)
-        self.assertTrue(ccOut[-1]['effectSize'] > 1)
+        self.assertTrue(ccOut[0]['p'] < 1e-3)
+        self.assertTrue(ccOut[-1]['effect'] > 1)
         
 if __name__ == '__main__':
     unittest.main()

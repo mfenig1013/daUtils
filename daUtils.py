@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import daUtilClasses as dauc
+import warnings
 
 # remove outliers
 # x numpy ndarray
@@ -71,14 +72,13 @@ def missingStats(df, verbose=True, skipCols=[]):
         print(retDF)
     return retDF
 
-# Tests relationship between a single "target" (dependent) column of a pandas.DataFrame
-# against all other (independent) columns using data-type specific methods
+# Tests relationship between a dependent column of a pandas.DataFrame
+# against all other ("feature") columns using data-type specific methods
 # df: pandas.DataFrame
-# target: column name in df corresponding to the depending variable of interest
+# target: column name in df corresponding to the depending 
 # targetType: Either "cont" or "class" corresponding to a continuous or class dependent
 # features: a list of columns in df to assess relationship to the target column, if left
-# blank, then featureSift will perform analysis on all columns
-# nThreshold: a threshold for the minimum number of points to run a test on
+# blank, then featureSift will perform analysis on all columns other than targetCol
 # Testing performed:
 # targetType = 'cont' and feature is continuous - Spearman correlation
 # targetType = 'cont' and feature is categorical - One vs. All Other Mann-Whitney test of all unique feature values
@@ -86,7 +86,7 @@ def missingStats(df, verbose=True, skipCols=[]):
 # targetType = 'class' and feature is categorical - Pairwise binomial tests
 # returns a pandas.DataFrame summarizing all features tested against the target
 # including effect size, significance, and a description of the test
-def featureSift(df, targetCol, targetType, features=[], nThreshold=30):
+def daSift(df, targetCol, targetType, features=[]):
     if len(features) == 0:
         features = list(set(df.columns).difference([targetCol]))
 
@@ -97,7 +97,7 @@ def featureSift(df, targetCol, targetType, features=[], nThreshold=30):
     if targetType == 'class':
         uniqueCat = list(set(df[targetCol]))
         if len(uniqueCat) <= 1: # there is nothing to target
-              raise ValueError(targetCol + " column has only a single value and targetType is 'class'")
+              raise ValueError(targetCol + " column has only a single unique value and targetType is 'class'")
         dfFilt = df[~(df[targetCol].isnull())]
     elif targetType == 'cont':
         dfFilt = df[~(df[targetCol].isnull()) & ~np.isinf(df[targetCol])]
@@ -119,7 +119,7 @@ def featureSift(df, targetCol, targetType, features=[], nThreshold=30):
             dataPair = dauc.catCat(y, x)
         else:
             raise ValueError('Invalid data types for ' + targetCol + ' and ' + feat)
-        fResults = dataPair.relate(nThreshold=nThreshold)
+        fResults = dataPair.relate()
         if type(fResults) == dict:
             featResults.append(fResults)
             featureList.append(feat)
@@ -131,7 +131,7 @@ def featureSift(df, targetCol, targetType, features=[], nThreshold=30):
     outDF['feature'] = featureList
     return outDF
 
-# computes a 'relationship' matrix between features of df
+# computes a 'relationship' matrix between columns of df
 # this uses default behavior based on the data type of two features being analysed
 def relMat(df, features=None):
     if features is None:
@@ -149,19 +149,24 @@ def relMat(df, features=None):
             if inumeric and jnumeric:
                 dataPair = dauc.contCont(ifeat, jfeat)
                 rel = dataPair.relate()
-                relValue = rel['effectSize']
+                relValue = rel['effect']
             elif ~inumeric and ~jnumeric:
                 dataPair = dauc.catCat(ifeat, jfeat)
                 rel = dataPair.relate()
-                relValue = [x for x in rel if x['test'] == 'CramerV'][0]['effectSize']                
+                relValue = [x for x in rel if x['test'] == 'CramerV'][0]['effect']                
             else:
                 if inumeric and not jnumeric:
                     dataPair = dauc.catCont(jfeat, ifeat)
                 elif not inumeric and jnumeric:
                     dataPair = dauc.catCont(ifeat, jfeat)
                 rel = dataPair.relate()
+                tmp = pd.DataFrame(rel)
+                try:
+                    largestEffect = tmp[tmp['effect'].abs() == max(tmp['effect'].abs())]['effect'].iloc[0]
+                except:
+                    largestEffect = np.nan
                 # take the maximum effect size
-                relValue = max([np.abs(x['effectSize']) for x in rel])
+                relValue = largestEffect
             cmat[i,j] = relValue
 
     cmatDF = pd.DataFrame(cmat)
@@ -169,9 +174,8 @@ def relMat(df, features=None):
     cmatDF.index=features
     return cmatDF
 
-# Tukey ladder transformation g(.) on an independent (x) variable
-# and an regression against a dependent (y) to assess goodness
-# of fit of the transformation i.e., y = alpha*g(x) + b + error
+# Tukey ladder transformation g(.) on an independent (x) variable against a 
+# dependent y
 # The Spearman correlation is computed also to assess
 # the existence of a montonic relationship of y and x
 # x and y are of type numpy.ndarray
@@ -194,12 +198,12 @@ def tladder(x, y, doPlot=True, doPre=True, verbose=True):
             raise ValueError('All x values are non-positive.  Adjust input data.')
         elif percNP > 0:
             if verbose:
-                print('Warning: Removing ' + str(percNP) + '% of data that is non-positive before analyzing.')
+                warnings.warn('Removing ' + str(percNP) + '% of data that is non-positive before analyzing.')
             x = x[iKeep]
             y = y[iKeep]
 
     # spearman correlation assesses whether any monotonic relationship exists
-    spMetric = ss.spearmanr(y, x)
+    spMetric = ss.spearmanr(y, x, nan_policy='omit')
     mapResults = {'power': [], 'gx': [], 'rmse': [],\
                    'Spearman': [], 'gxData': []}
     for ipower in range(len(ladder)):
