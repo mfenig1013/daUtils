@@ -1,2 +1,2 @@
-# daUtils
-a collection of data analysis tools
+# dautils
+a few data analysis tools
