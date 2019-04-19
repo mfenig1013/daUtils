@@ -188,7 +188,7 @@ def relMat(df, features=None):
 # verbose: returns ladder summaries
 # returns
 # mr is a pandas.Dataframe that contains summary results for each transformation,
-# transformed data, and the ols fit of y against the transformed x
+# transformed data, and the rmse of y against the transformed x
 def tladder(x, y, doPlot=True, doPre=True, verbose=False):
     # Tukey's Power Ladder
     ladder = [-2, -1, -0.5, 0, 0.5, 1, 2]
