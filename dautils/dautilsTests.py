@@ -61,7 +61,7 @@ class daUtilsTests(unittest.TestCase):
         self.assertTrue(counter == 0)
                 
     # test feature sifter
-    def testdaSift(self):
+    def testsift(self):
         # consider a continuous dependent variable with continuous and categorical independents
         npoints = 1000
         means = (0, 0)
@@ -70,7 +70,7 @@ class daUtilsTests(unittest.TestCase):
         dfCont = pd.DataFrame({'target': dat[:,0], 'xCont': dat[:,1]})
         dfCont['xCat'] = 'Cat0'
         dfCont.loc[dfCont['target'] > 1, 'xCat'] = 'Cat1'
-        contAnalysis = dautils.daSift(dfCont, targetCol='target', targetType='cont')
+        contAnalysis = dautils.sift(dfCont, targetCol='target', targetType='cont')
         self.assertTrue(contAnalysis['p'].iloc[0] < 1e-3)
 
         # consider a categorical dependent variable with continuous and categorical independents
@@ -85,7 +85,7 @@ class daUtilsTests(unittest.TestCase):
         dbCat['xCat'] = 'Cat0'
         dbCat.loc[(dbCat['random'] > 0.4) & (dbCat['random'] < 0.7), 'xCat'] = 'Cat1'
         del dbCat['random']
-        classAnalysis = dautils.daSift(dbCat, targetCol='target', targetType='class')
+        classAnalysis = dautils.sift(dbCat, targetCol='target', targetType='class')
         self.assertTrue(classAnalysis['p'].iloc[0] < 1)
     
     # test outlierRemoval

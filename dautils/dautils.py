@@ -6,8 +6,12 @@ import scipy.stats as ss
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import dautilsClasses as dauc
 import warnings
+
+try:
+    from . import dautilsClasses as dauc
+except Exception:
+    import dautilsClasses as dauc
 
 # remove outliers
 # x numpy ndarray
@@ -86,7 +90,7 @@ def missingStats(df, verbose=True, skipCols=[]):
 # targetType = 'class' and feature is categorical - Pairwise binomial tests
 # returns a pandas.DataFrame summarizing all features tested against the target
 # including effect size, significance, and a description of the test
-def daSift(df, targetCol, targetType, features=[]):
+def sift(df, targetCol, targetType, features=[]):
     if len(features) == 0:
         features = list(set(df.columns).difference([targetCol]))
 
