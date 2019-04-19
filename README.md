@@ -1,2 +1,3 @@
 # dautils
-a few data analysis tools
+data analysis tools for use with pandas and/or numpy arrays
+
