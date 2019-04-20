@@ -15,7 +15,7 @@ dautils.relmat: Calculate a quantitative 'relationship' matrix between all colum
 
 dautils.tladder: Construct Tukey's ladder between a dependent/'target' array and an independent/'feature' array [4].  The independent/'feature' array is assumed to have values scaled such that they are all > 0.  Quantifies the goodness of fit between each transformation via the root-mean-squared error.
 
-examples: /tests/dautilsTests.py
+See "dautils examples.ipynb" for example usage
 
 References
 
