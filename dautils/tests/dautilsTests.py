@@ -97,9 +97,15 @@ class dautilsTests(unittest.TestCase):
         x = dat[:,0]
         x = np.append(x, 100)
         x = np.append(x, -100)
-        xClean, iOutliers = dautils.removeOutliers(x, 2./npoints)
-        self.assertTrue((npoints) in iOutliers)
-        self.assertTrue((npoints+1) in iOutliers)
+        xClean, xOutliers, iOutliers = dautils.removeOutliers(x, 1./npoints)
+        self.assertTrue(np.sum(np.asarray([100, -100]) == xOutliers) == 2)
+        xClean, xOutliers, iOutliers = dautils.removeOutliers(x, 0.5/npoints, top=True, bottom=False)
+        self.assertTrue(len(xOutliers) == 1)
+        self.assertTrue(xOutliers[0] == 100)
+        xClean, xOutliers, iOutliers = dautils.removeOutliers(x, 0.5/npoints, top=False, bottom=True)
+        self.assertTrue(len(xOutliers) == 1)
+        self.assertTrue(xOutliers[0] == -100)
+        self.assertTrue(len(xClean) == 999)
         
     # test contCont and contCat object
     def testContContCat(self):
