@@ -134,6 +134,8 @@ def sift(df, targetCol, targetType, features=[]):
 
     outDF = pd.DataFrame(featResults)
     outDF['feature'] = featureList
+    outDF['effectMag'] = outDF['effect'].abs()
+    outDF = outDF[['feature', 'test', 'p', 'effect', 'effectMag']]
     return outDF
 
 # computes a 'relationship' matrix between columns of df
@@ -186,11 +188,10 @@ def relMat(df, features=None):
 # x and y are of type numpy.ndarray
 # doPlot: detailed plots? (default=True)
 # doPre: perform preprocessing to remove non-positive values of x 
-# verbose: returns ladder summaries
 # returns
 # mr is a pandas.Dataframe that contains summary results for each transformation,
 # transformed data, and the ols fit of y against the transformed x
-def tladder(x, y, doPlot=True, doPre=True, verbose=False):
+def tladder(x, y, doPlot=True, doPre=True):
     # Tukey's Power Ladder
     ladder = [-2, -1, -0.5, 0, 0.5, 1, 2]
     
@@ -206,8 +207,7 @@ def tladder(x, y, doPlot=True, doPre=True, verbose=False):
         if numNP == len(x):
             raise ValueError('All x values are non-positive.  Adjust input data.')
         elif percNP > 0:
-            if verbose:
-                warnings.warn('Removing ' + str(percNP) + '% of data that is non-positive before analyzing.')
+            warnings.warn('Removing ' + str(percNP) + '% of data that is non-positive before analyzing.')
             x = x[iKeep]
             y = y[iKeep]
 
@@ -269,7 +269,4 @@ def tladder(x, y, doPlot=True, doPre=True, verbose=False):
             plt.grid();
             plt.legend(loc='best')
     
-    if verbose:
-        with pd.option_context('display.max_columns', 3, 'display.max_rows', 10): 
-            print(mr[['gx', 'R2', 'Spearman']])
     return mr
