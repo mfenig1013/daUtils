@@ -199,9 +199,9 @@ def tladder(x, y, doPlot=True, doPre=True, verbose=False):
     y = y.astype(float)
     
     if doPre:
-        iKeep = np.where(x >= 0)
+        iKeep = np.where(x > 0)
         numNP = len(x) - float(iKeep[0].shape[0])
-        percNP = 100*numNP/len(x)
+        percNP = 100.*numNP/len(x)
         # this means we have negative values
         if numNP == len(x):
             raise ValueError('All x values are non-positive.  Adjust input data.')
