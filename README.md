@@ -1,5 +1,5 @@
 # dautils
-a few simple data analysis functions for use with pandas dataframe and/or numpy arrays
+a few simple data analysis functions for use with pandas dataframes and/or numpy arrays
 
 # installation
 python setup.py install
