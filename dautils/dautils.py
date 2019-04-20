@@ -267,6 +267,7 @@ def tladder(x, y, doPlot=True, doPre=True, verbose=False):
             plt.title('RMSE: ' + str(np.round(tmp['rmse'],2)) +\
                       ', g(x) = ' + tmp['gx'])
             plt.grid();
+            plt.legend(loc='best')
     
     if verbose:
         with pd.option_context('display.max_columns', 3, 'display.max_rows', 10): 
