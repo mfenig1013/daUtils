@@ -193,7 +193,11 @@ def relMat(df, features=None):
 def tladder(x, y, doPlot=True, doPre=True, verbose=False):
     # Tukey's Power Ladder
     ladder = [-2, -1, -0.5, 0, 0.5, 1, 2]
-
+    
+    # cast to take into account integer inputs
+    x = x.astype(float)
+    y = y.astype(float)
+    
     if doPre:
         iKeep = np.where(x >= 0)
         numNP = len(x) - float(iKeep[0].shape[0])
