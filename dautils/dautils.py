@@ -33,12 +33,13 @@ def removeOutliers(x, thresh=0.05, top=True, bottom=True):
     else:
         xsumm = pd.Series(x).describe([thresh, 1.0-thresh])
         if top:
-            iFilt = x > xsumm[iTop]
+            iFilt = x < xsumm[iTop]
         elif bottom:
-            iFilt = x < xsumm[iBottom]
+            iFilt = x > xsumm[iBottom]
     xRemoved = x[iFilt]
+    xOutliers = x[~iFilt]
     iOutliers = np.where(~iFilt)[0]
-    return xRemoved, iOutliers
+    return xRemoved, xOutliers, iOutliers
 
 # Show the percentage of missing/nan/inf values across all columns of a 
 # pandas.DataFrame
@@ -188,7 +189,7 @@ def relMat(df, features=None):
 # verbose: returns ladder summaries
 # returns
 # mr is a pandas.Dataframe that contains summary results for each transformation,
-# transformed data, and the rmse of y against the transformed x
+# transformed data, and the ols fit of y against the transformed x
 def tladder(x, y, doPlot=True, doPre=True, verbose=False):
     # Tukey's Power Ladder
     ladder = [-2, -1, -0.5, 0, 0.5, 1, 2]
