@@ -260,7 +260,7 @@ def tladder(x, y, doPlot=True, doPre=True, verbose=False):
             tmp = mr[mr['power'] == keyValue].iloc[0]
             fit = tmp['gxData']
             plt.subplot(3, 3, il + 3)
-            plt.plot(x, fit, 'r-', label='g(x)');
+            plt.plot(x, fit, 'ro', label='g(x)', alpha=0.5);
             plt.plot(x, y, 'bo', alpha=0.5, label='y');
             plt.xlabel('x');
             plt.ylabel('y');
