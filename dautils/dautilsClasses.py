@@ -45,16 +45,21 @@ class catCat(dataPair):
         contingencyTable = np.zeros((len(yUnique), len(xUnique)))
         for irow in range(len(yUnique)):
             for icol in range(len(xUnique)):
-                contingencyTable[irow,icol] = float(np.sum((self.x == xUnique[icol]) & (self.y == yUnique[irow])))
+                colVal = xUnique[icol]
+                rowVal = yUnique[irow]
+                contingencyTable[irow,icol] = float(np.sum((self.x == colVal) & (self.y == rowVal)))                
         
         # use this to calculate Cramer's V
-        c2 = ss.chi2_contingency(contingencyTable)
-        chi2Stat = c2[0]
-        pvalue = c2[1]
-        ctsize = contingencyTable.sum().sum()
-        minDen = min(contingencyTable.shape[0] - 1, contingencyTable.shape[1] - 1)
-        cv = np.sqrt((chi2Stat/ctsize)/minDen)
-        allRet.append({'p': pvalue, 'effect': cv, 'test': 'CramerV'})
+        try:
+            c2 = ss.chi2_contingency(contingencyTable)
+            chi2Stat = c2[0]
+            pvalue = c2[1]
+            ctsize = contingencyTable.sum().sum()
+            minDen = min(contingencyTable.shape[0] - 1, contingencyTable.shape[1] - 1)
+            cv = np.sqrt((chi2Stat/ctsize)/minDen)
+            allRet.append({'p': pvalue, 'effect': cv, 'test': 'CramerV'})
+        except:
+            allRet.append({'p': np.nan, 'effect': np.nan, 'test': 'CramerV error: Likely nan values'})
         
         # total count of y
         numy = float(len(self.y))
@@ -69,13 +74,17 @@ class catCat(dataPair):
                 totalCol = np.sum(contingencyTable[:,icol])
                 # p(y = yvalue | x = xvalue)
                 pyx = float(rc)/totalCol
-                # binomial test
-                btest = ss.binom_test(rc, totalCol, priorRow)
-                oddsRatio = pyx/priorRow
-                allRet.append({'p': btest, 'effect': oddsRatio,\
-                               'test': 'Binomial (p), effect p(y=' +\
-                               str(yvalue) + '|' + 'x=' + str(xvalue) +\
-                                          ') / p(y=' + str(yvalue) + ')'})
+                try:
+                    # binomial test
+                    btest = ss.binom_test(rc, totalCol, priorRow)
+                    oddsRatio = pyx/priorRow
+                    allRet.append({'p': btest, 'effect': oddsRatio,\
+                                   'test': 'Binomial (p), effect p(y=' +\
+                                   str(yvalue) + '|' + 'x=' + str(xvalue) +\
+                                              ') / p(y=' + str(yvalue) + ')'})
+                except:
+                    allRet.append({'p': np.nan, 'effect': np.nan,\
+                                   'test': 'Binomial test error: nan values'})
         return allRet
     
 # categorical-to-continuous
@@ -100,7 +109,7 @@ class catCont(dataPair):
                 'test': str(uc) + '_vs_~' + str(uc) + '_MannWhitney'}
             else:
                 faDict = {'effect': np.nan,\
-                          'test': '<' + str(nThreshold),
+                          'test': str(uc) + '_vs_~' + str(uc) + '_MannWhitney, <30',
                           'p': np.nan}
             allRet.append(faDict)
         return allRet
